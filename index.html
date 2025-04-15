@@ -11,11 +11,9 @@
   <h1>Cash Register</h1>
 
   <label for="item">Item Name:</label>
+  <!-- Start with an empty dropdown -->
   <select id="item">
-    <option value="T-shirt">T-shirt</option>
-    <option value="Hat">Hat</option>
-    <option value="Bag">Bag</option>
-    <!-- You can update these options later if needed -->
+    <option value="">Loading items...</option>
   </select>
 
   <label for="quantity">Quantity:</label>
@@ -25,39 +23,65 @@
 
   <p id="status"></p>
 
-<script>
-  function submitSale() {
-    const item = document.getElementById('item').value;
-    const quantity = parseInt(document.getElementById('quantity').value);
-    const date = new Date().toLocaleDateString();
-
-    // Create an object to hold your sale details.
-    const data = {
-      item: item,
-      quantity: quantity,
-      date: date  // Optional, as the script creates its own date.
-    };
-
-    // Your Google Apps Script web app URL goes here.
-    const scriptURL = "https://script.google.com/macros/s/AKfycbxnzCUtXWHs0iAGiX8gq326EB0ZKzWYX0v8I1ldMwHvEi_Mm6S_LiUW9iuDCVvIM2U-TA/exec";
-
-    fetch(scriptURL, {
-      method: 'POST',
-      mode: 'no-cors',  // 'no-cors' helps avoid issues between different websites.
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data)
-    })
-    .then(() => {
-      document.getElementById('status').textContent = "Sale submitted successfully!";
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      document.getElementById('status').textContent = "Error submitting sale.";
+  <script>
+    // Replace with your Web App URL (the same deployment URL you used for doPost)
+    const scriptURL = "YOUR_WEB_APP_URL_HERE";
+    
+    // When the page loads, fetch the inventory items.
+    document.addEventListener('DOMContentLoaded', function() {
+      const inventorySelect = document.getElementById('item');
+      fetch(scriptURL)
+        .then(response => response.json())
+        .then(data => {
+          // Clear any initial placeholder
+          inventorySelect.innerHTML = "";
+          
+          // Check if data is available
+          if (data.length === 0) {
+            inventorySelect.innerHTML = "<option value=''>No items available</option>";
+          } else {
+            data.forEach(function(item) {
+              const option = document.createElement('option');
+              option.value = item.name;
+              option.textContent = item.name;
+              inventorySelect.appendChild(option);
+            });
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching inventory:', error);
+          inventorySelect.innerHTML = "<option value=''>Error loading items</option>";
+        });
     });
-  }
-</script>
 
+    function submitSale() {
+      const item = document.getElementById('item').value;
+      const quantity = parseInt(document.getElementById('quantity').value);
+      const date = new Date().toLocaleDateString(); // Local date reference
+      
+      // Build the data object
+      const data = {
+        item: item,
+        quantity: quantity,
+        date: date  // Optional, backend uses its own timestamp
+      };
+
+      fetch(scriptURL, {
+        method: 'POST',
+        mode: 'no-cors',  // Allows simple POST requests without CORS errors; note response handling is limited.
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      })
+      .then(() => {
+        document.getElementById('status').textContent = "Sale submitted successfully!";
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('status').textContent = "Error submitting sale.";
+      });
+    }
+  </script>
 </body>
 </html>
